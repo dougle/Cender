@@ -62,5 +62,6 @@ Contributing
 All comments and bug reports are welcome, this code will be kept up-to-date, fixed and improved with new features as and when i stumble across them. Forks and pull requests are also welcome.
 
 Cender has been written to conform to PEP008 and the pep8 utility should be run on all modified files before commiting.
+
     # pip install pep8
     $ find . -iname '*.py' -exec pep8 {} \;
