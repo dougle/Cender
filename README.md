@@ -22,12 +22,13 @@ Installing
 Written and tested on python 2.6 and requires pubsub and pyserial.
 Uses pyqt for the interface.
 
-Install dependancies
-	aptitude install python-qt4
-	pip install pubsub pyserial
+Install dependancies:
+
+    # aptitude install python-qt4
+    # pip install pubsub pyserial
 
 Download the [zip file](https://github.com/dougle/Cender/archive/master.zip) and run: (doesn't need root):
-	python main.py
+    $ python main.py
 
 
 Usage
