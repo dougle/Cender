@@ -26,8 +26,13 @@ Install dependancies
 	aptitude install python-qt4
 	pip install pubsub pyserial
 
-Download the zip on the right and run (doesn't need root):
+Download the [zip file](https://github.com/dougle/Cender/archive/master.zip) and run: (doesn't need root):
 	python main.py
+
+
+Usage
+-----
+An introduction and demo video will be here soon.
 
 
 Drivers
