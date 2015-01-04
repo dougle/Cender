@@ -2,6 +2,7 @@ Cender
 ======
 
 A Gcode sender for TinyG motion controller boards.
+--------------------------------------------------
 
 Cender will let you:
 * Modify and backup your board configuration.
@@ -19,8 +20,8 @@ Cender will let you:
 
 Installing
 ------------
-Written and tested on python 2.6 and requires pubsub and pyserial.
-Uses pyqt for the interface.
+Written and tested on python 2.6.
+Cender requires pubsub and pyserial and uses pyqt for the interface.
 
 Install dependancies:
 
@@ -28,29 +29,32 @@ Install dependancies:
     # pip install pubsub pyserial
 
 Download the [zip file](https://github.com/dougle/Cender/archive/master.zip) and run: (doesn't need root):
+
     $ python main.py
 
 
 Usage
 -----
-An introduction and demo video will be here soon.
+An introduction/demo video will be here soon.
 
 
 Drivers
 ---------
-The structure of cender is a main window object that instantiates a driver based on the user's configuration and chosen board manufacturer and version.
+The structure of cender is a main window object that instantiates a driver object based on the user's configuration and chosen board manufacturer and version.
 
 Currently only TinyG versions 0.96 and 0.97 (master and edge) are supported, but new drivers can easily be written to support many many different controller boards.
 
-Drivers for each version normally extend a base class for the manufacturer which contains common code for that range of boards. All drivers extend a base controller class that contains the basic command sending and status receiving thread code.
+Drivers for each version normally extend a base class for the manufacturer which contains common code for that range of boards.  
+All drivers extend a base controller class that contains the basic command sending and status receiving thread code.
 
-If you have a spare controller board other than a tinyg and are willing to lend it, short term to me to develop and test a driver please contact me, that would be hugely appreciated.
+If you have a spare controller board other than a tinyg and are willing to lend it (short term) to me to develop and test a driver please contact me, that would be hugely appreciated.
 
 
 Known Issues
 ------------
 * For arc gcode G02 and G03, these commands are split into many "chords" before they reach the command queue, they will throw the file progress bar off.
-* Grbl stub file is in place but contains no methods, if someone has a Grbl board and can flesh that driver out that would be much appreciated. Alternatively contacting me and lending me a spare grbl shield would also be appreciated hugely.
+* Grbl stub file is in place but contains no methods, if someone has a Grbl board and can flesh that driver out that would be much appreciated. Alternatively contacting me and lending me a spare grbl shield (i have an uno) would also be appreciated hugely.
+* Untested on anything other than linux (debian)
 
 
 Contributing
@@ -58,3 +62,5 @@ Contributing
 All comments and bug reports are welcome, this code will be kept up-to-date, fixed and improved with new features as and when i stumble across them. Forks and pull requests are also welcome.
 
 Cender has been written to conform to PEP008 and the pep8 utility should be run on all modified files before commiting.
+    # pip install pep8
+    $ find . -iname '*.py' -exec pep8 {} \;
