@@ -18,6 +18,12 @@ Cender will let you:
 * Currently only supports TinyG 0.96 and 0.97 but Cender is structured to accept drivers for all boards past and present.
 
 
+![Cender Main Window](http://dougle.github.io/Cender/images/screenshots/main-window.png "Main Window")
+
+![Cender Options Window](http://dougle.github.io/Cender/images/screenshots/options-window.png "Options Window")
+
+
+
 Installing
 ------------
 Written and tested on python 2.6.
