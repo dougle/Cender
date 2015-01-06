@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <link href='https://fonts.googleapis.com/css?family=Chivo:900' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/pygment_trac.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/print.css" media="print">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <title>Cender by dougle</title>
+  </head>
+
+  <body>
+    <div id="container">
+      <div class="inner">
+
+        <header>
+          <h1>Cender</h1>
+          <h2>A Gcode sender</h2>
+        </header>
+
+        <section id="downloads" class="clearfix">
+          <a href="https://github.com/dougle/Cender/zipball/master" id="download-zip" class="button"><span>Download .zip</span></a>
+          <a href="https://github.com/dougle/Cender/tarball/master" id="download-tar-gz" class="button"><span>Download .tar.gz</span></a>
+          <a href="https://github.com/dougle/Cender" id="view-on-github" class="button"><span>View on GitHub</span></a>
+        </section>
+
+        <hr>
+
+        <section id="main_content">
+          <h1>
+<a id="cender" class="anchor" href="#cender" aria-hidden="true"><span class="octicon octicon-link"></span></a>Cender</h1>
+
+<h2>
+<a id="a-gcode-sender-for-tinyg-motion-controller-boards" class="anchor" href="#a-gcode-sender-for-tinyg-motion-controller-boards" aria-hidden="true"><span class="octicon octicon-link"></span></a>A Gcode sender for TinyG motion controller boards.</h2>
+
+<p>Cender will let you:</p>
+
+<ul>
+<li>Modify and backup your board configuration.</li>
+<li>Jog your machine around and display current coordinates for XYZ and A.</li>
+<li>Specify coordinates absolutely, relatively, as a percentage or arithmetically using the current position.</li>
+<li>Home all axis or individual axis.</li>
+<li>Enter manual Gcode or board specific commands.</li>
+<li>Let you define offsets and change the current position based on those offsets.</li>
+<li>Toggle coolant and spindle including direction and speed.</li>
+<li>Upload and track file progress.</li>
+<li>Monitor board command queue and current velocity.</li>
+<li>Keep updated with your controller's firmware.</li>
+<li>Currently only supports TinyG 0.96 and 0.97 but Cender is structured to accept drivers for all boards past and present.</li>
+</ul>
+
+<h2>
+<a id="installing" class="anchor" href="#installing" aria-hidden="true"><span class="octicon octicon-link"></span></a>Installing</h2>
+
+<p>Written and tested on python 2.6.
+Cender requires pubsub and pyserial and uses pyqt for the interface.</p>
+
+<p>Install dependancies:</p>
+
+<pre><code># aptitude install python-qt4
+# pip install pubsub pyserial
+</code></pre>
+
+<p>Download the <a href="https://github.com/dougle/Cender/archive/master.zip">zip file</a> and run: (doesn't need root):</p>
+
+<pre><code>$ python main.py
+</code></pre>
+
+<h2>
+<a id="usage" class="anchor" href="#usage" aria-hidden="true"><span class="octicon octicon-link"></span></a>Usage</h2>
+
+<p>An introduction/demo video will be here soon.</p>
+
+<h2>
+<a id="drivers" class="anchor" href="#drivers" aria-hidden="true"><span class="octicon octicon-link"></span></a>Drivers</h2>
+
+<p>The structure of cender is a main window object that instantiates a driver object based on the user's configuration and chosen board manufacturer and version.</p>
+
+<p>Currently only TinyG versions 0.96 and 0.97 (master and edge) are supported, but new drivers can easily be written to support many many different controller boards.</p>
+
+<p>Drivers for each version normally extend a base class for the manufacturer which contains common code for that range of boards.<br>
+All drivers extend a base controller class that contains the basic command sending and status receiving thread code.</p>
+
+<p>If you have a spare controller board other than a tinyg and are willing to lend it (short term) to me to develop and test a driver please contact me, that would be hugely appreciated.</p>
+
+<h2>
+<a id="known-issues" class="anchor" href="#known-issues" aria-hidden="true"><span class="octicon octicon-link"></span></a>Known Issues</h2>
+
+<ul>
+<li>For arc gcode G02 and G03, these commands are split into many "chords" before they reach the command queue, they will throw the file progress bar off.</li>
+<li>Grbl stub file is in place but contains no methods, if someone has a Grbl board and can flesh that driver out that would be much appreciated. Alternatively contacting me and lending me a spare grbl shield (i have an uno) would also be appreciated hugely.</li>
+<li>Untested on anything other than linux (debian)</li>
+</ul>
+
+<h2>
+<a id="contributing" class="anchor" href="#contributing" aria-hidden="true"><span class="octicon octicon-link"></span></a>Contributing</h2>
+
+<p>All comments and bug reports are welcome, this code will be kept up-to-date, fixed and improved with new features as and when i stumble across them. Forks and pull requests are also welcome.</p>
+
+<p>Cender has been written to conform to PEP008 and the pep8 utility should be run on all modified files before commiting.</p>
+
+<pre><code># pip install pep8
+$ find . -iname '*.py' -exec pep8 {} \;
+</code></pre>
+        </section>
+
+        <footer>
+          Cender is maintained by <a href="https://github.com/dougle">dougle</a><br>
+          This page was generated by <a href="http://pages.github.com">GitHub Pages</a>. Tactile theme by <a href="https://twitter.com/jasonlong">Jason Long</a>.
+        </footer>
+
+                  <script type="text/javascript">
+            var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+            document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+          </script>
+          <script type="text/javascript">
+            try {
+              var pageTracker = _gat._getTracker("UA-58303612-1");
+            pageTracker._trackPageview();
+            } catch(err) {}
+          </script>
+
+      </div>
+    </div>
+  </body>
+</html>
