@@ -371,3 +371,6 @@ footer a:hover {
 
 /* Mobile Portrait Size to Mobile Landscape Size (devices and browsers) */
 @media only screen and (max-width: 479px) { }
+
+#screenshot-wrapper{width:100%;margin:0;}
+.screenshot{float:left;margin:10px;}
