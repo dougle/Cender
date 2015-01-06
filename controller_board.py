@@ -470,7 +470,7 @@ class ControllerBoard(QtCore.QObject):
 
         self.send(command)
 
-    def resetAxis(self, axis, position):
+    def reset_axis(self, axis, position):
         command = 'G92 ' + axis + str(position)
 
         if conf.get('common.add_gcode_comments_for_system_commands'):
@@ -710,7 +710,7 @@ class ControllerBoard(QtCore.QObject):
                 time.sleep(0.3)
 
             self.tracking_progress = True
-            # self.timer()
+            self.timer()
             self.echo_back('start-of-file')
             self.sender(content)
             self.echo_back('end-of-file')

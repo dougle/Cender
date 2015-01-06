@@ -94,10 +94,10 @@ class MainWindow(QtGui.QMainWindow):
         self.set_comm_status('Fetching Config')
         self.comm_state(2)
 
-    def restoreLastPositions(self):
+    def restore_last_positions(self):
         for axis_letter in self.controller.installed_axis:
             if conf.get('last_positions.' + axis_letter.lower()) is not None:
-                self.controller.resetAxis(
+                self.controller.reset_axis(
                     axis_letter.upper(),
                     conf.get('last_positions.' + axis_letter.lower()))
 
@@ -166,7 +166,7 @@ controller to %s?
                 QtGui.QMessageBox.Yes,
                 QtGui.QMessageBox.No)
             if reply == QtGui.QMessageBox.Yes:
-                self.restoreLastPositions()
+                self.restore_last_positions()
 
         # flag the controller object to start
         # saving last known coordinates
@@ -650,7 +650,7 @@ controller to %s?
             # absolute
             match = re.search(r'^([\-\+])?[\d\.]+$', coordinate)
             if match is not None:
-                self.controller.resetAxis(axis_letter, coordinate)
+                self.controller.reset_axis(axis_letter, coordinate)
 
     def toggle_jog_ui_elements(self, state):
         elements_to_toggle = [
