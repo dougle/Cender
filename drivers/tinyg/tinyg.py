@@ -88,8 +88,7 @@ class TinyG(ControllerBoard):
 
         use_rtscts = (conf.get('connection.port.flow_control') == 'rtscts')
         use_xonxoff = (conf.get('connection.port.flow_control') == 'xonxoff')
-        # try:
-        if True:
+        try:
             self.port = serial.Serial(
                 conf.get('connection.port.name'),
                 int(conf.get('connection.port.baud')),
@@ -112,12 +111,12 @@ class TinyG(ControllerBoard):
             self.echo_back('connect')
 
             time.sleep(10)
-        #     if not self.connected:
-        #         raise Exception()
-        # except:
-        #     self.logger.debug('Connection to TinyG failed')
-        #     self.connected = False
-        #     pub.sendMessage('disconnect-received')
+            if not self.connected:
+                raise Exception()
+        except:
+            self.logger.debug('Connection to TinyG failed')
+            self.connected = False
+            pub.sendMessage('disconnect-received')
 
         return False
 
