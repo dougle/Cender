@@ -1974,43 +1974,6 @@
           </item>
          </layout>
         </widget>
-        <widget class="QWidget" name="tabVisualizer">
-         <attribute name="title">
-          <string>Visualizer</string>
-         </attribute>
-         <layout class="QVBoxLayout" name="verticalLayout_5">
-          <property name="spacing">
-           <number>0</number>
-          </property>
-          <property name="margin">
-           <number>0</number>
-          </property>
-         </layout>
-        </widget>
-        <widget class="QWidget" name="tabCamera">
-         <attribute name="title">
-          <string>Camera</string>
-         </attribute>
-         <widget class="QLabel" name="lblCameraFrame">
-          <property name="geometry">
-           <rect>
-            <x>0</x>
-            <y>0</y>
-            <width>511</width>
-            <height>301</height>
-           </rect>
-          </property>
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-            <horstretch>1</horstretch>
-            <verstretch>1</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="text">
-           <string/>
-          </property>
-         </widget>
-        </widget>
        </widget>
       </item>
      </layout>
