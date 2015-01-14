@@ -38,6 +38,8 @@ Download the [zip file](https://github.com/dougle/Cender/archive/master.zip) and
 
     $ python main.py
 
+or double click cender.sh
+
 
 Usage
 -----
