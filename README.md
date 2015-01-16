@@ -1,6 +1,9 @@
 Cender
 ======
 
+*/ˈsen.dər/*  
+noun - a person or thing that sends.
+
 A Gcode sender for TinyG motion controller boards.
 --------------------------------------------------
 
