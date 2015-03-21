@@ -567,7 +567,7 @@ class ControllerBoard(QtCore.QObject):
 
     def parse_distance_mode(self, line):
         # monitor requests to switch the absolute mode flag
-        match = re.search(r'^(G9[01])', line)
+        match = re.search(r'^(G9[01])', line, re.IGNORECASE)
         if match is not None:
             self.logger.debug('Switching distance mode')
             groups = match.groups()
@@ -580,7 +580,7 @@ class ControllerBoard(QtCore.QObject):
 
     def parse_feed_rate(self, line):
         # monitor requests to change the feed rate
-        match = re.search(r'F([\d\.]+)', line)
+        match = re.search(r'F([\d\.]+)', line, re.IGNORECASE)
         if match is not None:
             self.logger.debug('Switching feed rate')
             groups = match.groups()
