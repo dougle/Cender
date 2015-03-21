@@ -1974,6 +1974,22 @@
           </item>
          </layout>
         </widget>
+        <widget class="QWidget" name="tabVisualizer">
+         <attribute name="title">
+          <string>Visualizer</string>
+         </attribute>
+         <layout class="QVBoxLayout" name="verticalLayout_5">
+          <property name="spacing">
+           <number>0</number>
+          </property>
+          <property name="margin">
+           <number>0</number>
+          </property>
+          <item>
+           <layout class="QHBoxLayout" name="visualiserContainer"/>
+          </item>
+         </layout>
+        </widget>
        </widget>
       </item>
      </layout>

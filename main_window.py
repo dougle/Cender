@@ -13,6 +13,9 @@ from pubsub import pub
 from functools import partial
 from options_window import OptionsWindow
 from about_window import AboutWindow
+
+from visualisation import VisualisationWidget
+
 import struct
 
 
@@ -220,6 +223,7 @@ controller to %s?
         self.toggle_axis_visibility(axis_letter, True)
 
     def position_received_handler(self, axis_letter, position):
+        self.visualiser.setToolAxisPosition(axis_letter, position)
         self.update_lcd(axis_letter, position)
 
     def velocity_received_handler(self, velocity):
@@ -423,6 +427,24 @@ controller to %s?
         # self.camera_thread.daemon = True
         # self.camera_thread.frameWidget = self.ui.cameraFrame
         # self.camera_thread.start()
+
+        self.visualiser = VisualisationWidget()
+        self.ui.visualiserContainer.addWidget(self.visualiser)
+
+        # testing the visualisation widget without having
+        # a board connected
+        # self.visualiser.addToolPath('G3 X50 Y-50 Z-10 R-50')
+        # self.visualiser.addToolPath('G2 X100 Y-100 Z-10 R50')
+        # self.visualiser.addToolPath('G3 X0 Y0 Z0 I-50 J50')
+        # self.visualiser.addToolPath('G19')
+        # self.visualiser.addToolPath('G2 X100 Y0 Z0 J-50 P3')
+        # self.visualiser.addToolPath('G17')
+        # self.visualiser.addToolPath('G0 X0 Y0 Z0')
+        # self.visualiser.addToolPath('G2 X0 Y0 Z-100 I-50 P3')
+
+        # self.visualiser.setToolPosition(50,50,0)
+        # self.visualiser.setToolPosition(50,50,-10)
+        # self.visualiser.setToolPosition(50,100,0)
 
     def set_offsets(self):
         self.logger.debug('Setting up offsets')
@@ -741,6 +763,21 @@ controller to %s?
 
         if os.path.isfile(file_path):
             self.ui.btnStart.setEnabled(True)
+
+            # send the file to the visualiser
+            self.visualiser.clearToolPaths()
+
+            content = ''
+            with open(file_path) as f:
+                content = f.read()
+
+            if bool(conf.get('common.filter_file_commands')):
+                content = self.controller.filter_file(content)
+                # self.logger.debug('filtered file:' + content)
+
+            if content is not None and content != '':
+                for command in content.split('\n'):
+                    self.visualiser.addToolPath(command)
 
     def spindle_toggle(self):
         # filter and cast spindle speed
