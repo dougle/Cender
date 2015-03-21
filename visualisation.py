@@ -5,12 +5,13 @@ from OpenGL import GL, GLU, GLUT
 
 from PyQt4 import QtCore, QtGui, QtOpenGL
 
+
 class VisualisationWidget(QtOpenGL.QGLWidget):
     xRotationChanged = QtCore.pyqtSignal(int)
     yRotationChanged = QtCore.pyqtSignal(int)
     zRotationChanged = QtCore.pyqtSignal(int)
 
-    def __init__(self, parent = None):
+    def __init__(self, parent=None):
         super(VisualisationWidget, self).__init__(parent)
 
         self.logger = logging.getLogger(__name__)
@@ -50,7 +51,8 @@ class VisualisationWidget(QtOpenGL.QGLWidget):
         self.tool = QtGui.QColor.fromCmykF(0.3, 0, 0.99, 0)
 
         self.quadric = GLU.gluNewQuadric()
-        GLU.gluQuadricNormals(self.quadric, GLU.GLU_SMOOTH);                     # // Create Smooth Normals
+        # // Create Smooth Normals
+        GLU.gluQuadricNormals(self.quadric, GLU.GLU_SMOOTH)
         GLU.gluQuadricTexture(self.quadric, GL.GL_TRUE)
 
     def minimumSizeHint(self):
@@ -74,17 +76,17 @@ class VisualisationWidget(QtOpenGL.QGLWidget):
             self.updateGL()
 
     def setXPosition(self, coord):
-        # # print "X is "+str(coord)
+        # print "X is "+str(coord)
         self.xPos = coord
         self.updateGL()
 
     def setYPosition(self, coord):
-        # # print "Y is "+str(coord)
+        # print "Y is "+str(coord)
         self.yPos = coord
         self.updateGL()
 
     def setZPosition(self, coord):
-        # # print "Z is "+str(coord)
+        # print "Z is "+str(coord)
         self.zPos = max(10, coord)
         self.updateGL()
 
@@ -104,16 +106,15 @@ class VisualisationWidget(QtOpenGL.QGLWidget):
         self.tool_list = GL.glGenLists(1)
         self.tool_path_list = GL.glGenLists(1)
 
-
     def paintGL(self):
         GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT)
         GL.glLoadIdentity()
-        GL.glOrtho(-self.zPos, self.zPos, self.zPos, -self.zPos, self.zPos+999, -self.zPos-999)
+        GL.glOrtho(-self.zPos, self.zPos, self.zPos, -self.zPos,
+                   self.zPos + 999, -self.zPos - 999)
         GL.glTranslated(self.xPos, self.yPos, 0)
         GL.glRotated(self.xRot / 16.0, 1.0, 0.0, 0.0)
         GL.glRotated(self.yRot / 16.0, 0.0, 1.0, 0.0)
         GL.glRotated(self.zRot / 16.0, 0.0, 0.0, 1.0)
-        
 
         self.renderToolPaths()
         self.renderTool()
@@ -126,12 +127,14 @@ class VisualisationWidget(QtOpenGL.QGLWidget):
 
         GL.glMatrixMode(GL.GL_PROJECTION)
         GL.glLoadIdentity()
-        GL.glOrtho(-self.zPos, self.zPos, -self.zPos, +self.zPos, self.zPos+999, -self.zPos-999)
+        GL.glOrtho(-self.zPos, self.zPos, -self.zPos, +self.zPos,
+                   self.zPos + 999, -self.zPos - 999)
         GL.glMatrixMode(GL.GL_MODELVIEW)
 
-    def wheelEvent(self,event):
+    def wheelEvent(self, event):
         self.zPos += (event.delta() / 10)
         self.setZPosition(self.zPos)
+
     def mousePressEvent(self, event):
         self.lastPos = event.pos()
 
@@ -162,9 +165,9 @@ class VisualisationWidget(QtOpenGL.QGLWidget):
 
         # draw lines
         for vertex in self.vertices:
-            ## print vertex
+            # print vertex
             self.qglColor(vertex['colour'])
-            
+
             if 'x' in vertex:
                 self.lastXCoord = float(vertex['x'])
             if 'y' in vertex:
@@ -173,9 +176,9 @@ class VisualisationWidget(QtOpenGL.QGLWidget):
                 self.lastZCoord = float(vertex['z'])
 
             GL.glVertex3f(
-                self.lastXCoord*3,
-                self.lastYCoord*3,
-                self.lastZCoord*3)
+                self.lastXCoord * 3,
+                self.lastYCoord * 3,
+                self.lastZCoord * 3)
 
         # TODO keep track of extents and zoom to fit
 
@@ -184,8 +187,6 @@ class VisualisationWidget(QtOpenGL.QGLWidget):
 
     def renderTool(self):
         GL.glNewList(self.tool_list, GL.GL_COMPILE)
-        
-        
 
         # draw cone
         GL.glPushMatrix()
@@ -194,7 +195,7 @@ class VisualisationWidget(QtOpenGL.QGLWidget):
         GLU.gluCylinder(self.quadric, 0, 10, 10, 100, 10)
         GL.glPopMatrix()
 
-        # # draw shank
+        # draw shank
         GL.glPushMatrix()
         self.qglColor(self.tool)
         GL.glTranslatef(self.tool_x, self.tool_y, self.tool_z + 10)
@@ -213,8 +214,8 @@ class VisualisationWidget(QtOpenGL.QGLWidget):
         self.updateGL()
 
     def setToolAxisPosition(self, axis_letter, position):
-        setattr(self, 'tool_'+ axis_letter.lower(), position)
-    
+        setattr(self, 'tool_' + axis_letter.lower(), position)
+
     def setToolPosition(self, x=None, y=None, z=None):
         if x is not None:
             self.tool_x = x
@@ -227,13 +228,13 @@ class VisualisationWidget(QtOpenGL.QGLWidget):
 
     def setCurrentPosition(self, x, y, z):
         self.vertices.append({
-            'colour':self.blank,
-            'x':x,
-            'y':y,
-            'z':z})
+            'colour': self.blank,
+            'x': x,
+            'y': y,
+            'z': z})
 
     def addToolPath(self, command):
-        if len(command) >0:
+        if len(command) > 0:
             for vertex in self.parseCommand(command):
                 self.vertices.append(vertex)
 
@@ -268,16 +269,16 @@ class VisualisationWidget(QtOpenGL.QGLWidget):
                 self.y_offset_key = 'k'
                 self.z_offset_key = 'i'
 
-
     def parseCommand(self, command):
         # ignore N line numbers when finding command number
-        match = re.match(r'^(?:N\d+ )?G(\d+)', str(command).strip(), re.IGNORECASE)
+        match = re.match(
+            r'^(?:N\d+ )?G(\d+)', str(command).strip(), re.IGNORECASE)
 
         vertices = []
 
         if match is not None:
             movement_code = int(match.group(1))
-            
+
             if 0 <= movement_code <= 1:
                 vertices += self.parse_line(movement_code, command)
             elif 2 <= movement_code <= 3:
@@ -306,20 +307,20 @@ class VisualisationWidget(QtOpenGL.QGLWidget):
             'colour': colour,
             'command': command}
 
-        for dimension in ['x','y','z']:
+        for dimension in ['x', 'y', 'z']:
             if dimension in command_codes:
                 vertex[dimension] = float(command_codes[dimension])
 
         return [vertex]
 
-
     def parse_arc(self, movement_code, command):
         # print command
-        # print "lastx %f lasty %f lastz %f" % (self.lastXCoord, self.lastYCoord, self.lastZCoord)
+        # print "lastx %f lasty %f lastz %f" % (self.lastXCoord,
+        # self.lastYCoord, self.lastZCoord)
 
-        last_x = getattr(self, 'last'+ self.x_key.upper() +'Coord')
-        last_y = getattr(self, 'last'+ self.y_key.upper() +'Coord')
-        last_z = getattr(self, 'last'+ self.z_key.upper() +'Coord')
+        last_x = getattr(self, 'last' + self.x_key.upper() + 'Coord')
+        last_y = getattr(self, 'last' + self.y_key.upper() + 'Coord')
+        last_z = getattr(self, 'last' + self.z_key.upper() + 'Coord')
         command_codes = {}
 
         coords = re.findall(
@@ -330,14 +331,19 @@ class VisualisationWidget(QtOpenGL.QGLWidget):
         # fetch all provided coordinates
         for coord in coords:
             command_codes[coord[0].lower()] = float(coord[1])
-        
+
         # default finish coordinates to current
-        for axis in ['x','y','z']:
+        for axis in ['x', 'y', 'z']:
             if axis not in command_codes:
-                command_codes[axis] = getattr(self, 'last'+ getattr(self, axis+'_key').upper() +'Coord')
+                attr_name = ''.join([
+                    'last',
+                    getattr(self, axis + '_key').upper(),
+                    'Coord'])
+                command_codes[axis] = getattr(
+                    self, attr_name)
 
         # default offsets to zero if not provided
-        for offset in ['i','j','k','p']:
+        for offset in ['i', 'j', 'k', 'p']:
             if offset not in command_codes:
                 command_codes[offset] = 0
 
@@ -358,23 +364,23 @@ class VisualisationWidget(QtOpenGL.QGLWidget):
             dz = (command_codes[self.z_key] - last_z)
         # print "dx %f dy %f dz %f" % (dx, dy, dz)
 
-
-
         # calculate the center coords if we have an r value
         if 'r' in command_codes:
             radius = math.fabs(command_codes['r'])
 
-            half_hyp = math.hypot(dx, dy)/2
+            half_hyp = math.hypot(dx, dy) / 2
             start_to_end_incline = math.atan2(dy, dx)
             # point_to_point_incline = math.acos( (dx/2) / half_mid_hyp )
 
-            # print "start_to_end_incline %f half_hyp %f radius %f" % (start_to_end_incline, half_hyp, radius)
+            # print "start_to_end_incline %f half_hyp %f radius %f" %
+            # (start_to_end_incline, half_hyp, radius)
 
             major_minor = -1
-            if command_codes['r'] <0:
+            if command_codes['r'] < 0:
                 major_minor = 1
 
-            incline = start_to_end_incline + (math.acos( half_hyp / radius ) *major_minor)
+            incline = start_to_end_incline + \
+                (math.acos(half_hyp / radius) * major_minor)
 
             cdx = math.cos(incline) * radius
             cdy = math.sin(incline) * radius
@@ -388,48 +394,65 @@ class VisualisationWidget(QtOpenGL.QGLWidget):
             del command_codes['r']
 
         else:
-            radius = math.hypot(command_codes[self.x_offset_key], command_codes[self.y_offset_key])
-            
+            radius = math.hypot(
+                command_codes[self.x_offset_key],
+                command_codes[self.y_offset_key])
+
             # log and abort this command if our params
             # give us a weird radius
             if radius <= 0:
-                self.logger.debug('Computed radius is negative or zero, check command: '+ command)
+                self.logger.debug(
+                    'Computed radius is negative or zero, check command: '
+                    + command)
                 return []
 
-
-        # print "x %f y %f z %f i %f j %f k %f" % (command_codes[self.x_key], command_codes[self.y_key],command_codes[self.z_key],command_codes[self.x_offset_key],command_codes[self.y_offset_key],command_codes[self.z_offset_key])
+        # print "x %f y %f z %f i %f j %f k %f" % (command_codes[self.x_key],
+        # command_codes[self.y_key],command_codes[self.z_key],command_codes[self.x_offset_key],command_codes[self.y_offset_key],command_codes[self.z_offset_key])
 
         # check start and end point are equidistant from the center
         # TODO
 
-
         center_x = last_x + command_codes[self.x_offset_key]
         center_y = last_y + command_codes[self.y_offset_key]
 
-        # print "center_x %f center_y %f radius %f" % (center_x, center_y, radius)
-
+        # print "center_x %f center_y %f radius %f" % (center_x, center_y,
+        # radius)
 
         # calculate the angle between start and end points
-        start_angle = math.atan2( (command_codes[self.y_offset_key]*-1), (command_codes[self.x_offset_key]*-1) )
-        end_angle = math.atan2( (command_codes[self.y_key] - last_y - command_codes[self.y_offset_key]), (command_codes[self.x_key] - last_x - command_codes[self.x_offset_key]) )
-        # print "(%f - %f - %f), (%f - %f - %f)" % (command_codes[self.y_key],last_y,command_codes[self.y_offset_key],command_codes[self.x_key],last_x,command_codes[self.x_offset_key])
+        start_angle = math.atan2(
+            (command_codes[self.y_offset_key] * -1),
+            (command_codes[self.x_offset_key] * -1))
+
+        end_point_y_offset = (
+            command_codes[self.y_key]
+            - last_y
+            - command_codes[self.y_offset_key])
+        end_point_x_offset = (
+            command_codes[self.x_key]
+            - last_x
+            - command_codes[self.x_offset_key])
+        end_angle = math.atan2(end_point_y_offset, end_point_x_offset)
+
+        # print "(%f - %f - %f), (%f - %f - %f)" %
+        # (command_codes[self.y_key],last_y,command_codes[self.y_offset_key],command_codes[self.x_key],last_x,command_codes[self.x_offset_key])
 
         # print "start_angle %f end_angle %f" % (start_angle, end_angle)
 
         max_angle = math.fabs(start_angle - end_angle)
 
         # add on some full revolutions
-        max_angle += ((2*math.pi) * command_codes['p'])
-        #max_angle = (max_angle * direction)
+        max_angle += ((2 * math.pi) * command_codes['p'])
+        # max_angle = (max_angle * direction)
 
-
-        current_angle = angle_of_each_chord = ((0.1 / (2* math.pi * radius) * (2*math.pi)))
+        current_angle = angle_of_each_chord = (
+            (0.1 / (2 * math.pi * radius) * (2 * math.pi)))
         z_offset_per_chord = (dz * (angle_of_each_chord / max_angle))
 
-        # print "max_angle %f angle_of_each_chord %f z_offset_per_chord %f current_angle %f" % (max_angle, angle_of_each_chord, z_offset_per_chord, current_angle)
+        # print "max_angle %f angle_of_each_chord %f z_offset_per_chord %f
+        # current_angle %f" % (max_angle, angle_of_each_chord,
+        # z_offset_per_chord, current_angle)
 
-
-        step=1
+        step = 1
         vertices = []
         new_x = last_x
         new_y = last_y
@@ -437,17 +460,9 @@ class VisualisationWidget(QtOpenGL.QGLWidget):
         while current_angle <= max_angle:
             # print "current_angle %f" % current_angle
 
-            chord = 0
-            if math.pi == current_angle:
-                chord = (radius * 2)
-            elif (2*math.pi) == current_angle:
-                chord = 0
-            else:
-                chord = (radius/math.sin((math.pi - current_angle)/2)) * math.sin(current_angle)
-            
             comp_angle = (start_angle + (current_angle * direction))
 
-            # print "chord %f comparative angle %f" % (chord, comp_angle)
+            # print "comparative angle %f" % (comp_angle)
 
             new_x = center_x + ((math.cos(comp_angle) * radius))
             new_y = center_y + ((math.sin(comp_angle) * radius))
@@ -459,7 +474,7 @@ class VisualisationWidget(QtOpenGL.QGLWidget):
                 self.x_key: new_x,
                 self.y_key: new_y,
                 self.z_key: new_z
-                })
+            })
 
             # print "new_x %f   new_y %f   new_z %f" % (new_x, new_y, new_z)
 
@@ -472,8 +487,8 @@ class VisualisationWidget(QtOpenGL.QGLWidget):
                 current_angle = max_angle
             step += 1
 
-        setattr(self, 'last'+ self.x_key.upper() +'Coord', new_x)
-        setattr(self, 'last'+ self.y_key.upper() +'Coord', new_y)
-        setattr(self, 'last'+ self.z_key.upper() +'Coord', new_z)
+        setattr(self, 'last' + self.x_key.upper() + 'Coord', new_x)
+        setattr(self, 'last' + self.y_key.upper() + 'Coord', new_y)
+        setattr(self, 'last' + self.z_key.upper() + 'Coord', new_z)
 
         return vertices
