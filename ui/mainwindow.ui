@@ -1339,7 +1339,7 @@
        </layout>
       </item>
       <item>
-       <widget class="QTabWidget" name="tabAxisVisualizer">
+       <widget class="QTabWidget" name="tabControls">
         <property name="enabled">
          <bool>true</bool>
         </property>

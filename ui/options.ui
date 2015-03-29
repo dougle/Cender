@@ -692,6 +692,20 @@
         </item>
        </layout>
       </item>
+      <item>
+       <layout class="QHBoxLayout" name="horizontalLayout_3">
+        <item>
+         <widget class="QCheckBox" name="checkBoxShowVisualiser">
+          <property name="toolTip">
+           <string>When loading a file switch to the visualiser tab.</string>
+          </property>
+          <property name="text">
+           <string>Show Visualiser</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
      </layout>
     </widget>
    </widget>

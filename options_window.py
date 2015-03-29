@@ -95,6 +95,12 @@ class OptionsWindow(QtGui.QDialog):
 
         # interface
 
+        self.ui.spinBoxLCDPrecision.setValue(
+            float(conf.get('ui.lcd_precision')))
+
+        self.ui.checkBoxShowVisualiser.setChecked(
+            conf.get('ui.show_visualiser'))
+
         # clear
         for i in reversed(range(self.ui.offsetList.count())):
             if 'QHBoxLayout' in str(type(self.ui.offsetList.itemAt(i))):

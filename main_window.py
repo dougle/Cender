@@ -787,9 +787,12 @@ controller to %s?
                 content = self.controller.filter_file(content)
                 # self.logger.debug('filtered file:' + content)
 
+            file_match = re.search(r'\.ng?c$', file_path)
+            if file_match is not None and conf.get('ui.show_visualiser'):
+                self.tabControls.setCurrentPage(1)
+
             if content is not None and content != '':
-                for command in content.split('\n'):
-                    self.visualiser.add_command.emit(command)
+                self.visualiser.add_commands.emit(content)
 
     def spindle_toggle(self):
         # filter and cast spindle speed

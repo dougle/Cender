@@ -9,6 +9,7 @@ from PyQt4 import QtCore, QtGui, QtOpenGL
 class Visualiser(QtCore.QThread):
 
     add_command = QtCore.pyqtSignal(str)
+    add_commands = QtCore.pyqtSignal(str)
     clear = QtCore.pyqtSignal()
     set_config = QtCore.pyqtSignal(str, float)
     tool_position = QtCore.pyqtSignal(str, float)
@@ -20,12 +21,18 @@ class Visualiser(QtCore.QThread):
         self.widget = widget
 
         self.add_command.connect(self.add_command_handler)
+        self.add_commands.connect(self.add_commands_handler)
         self.clear.connect(self.clear_handler)
         self.set_config.connect(self.set_config_handler)
         self.tool_position.connect(self.tool_position_handler)
 
     def add_command_handler(self, command):
         self.widget.add_tool_path(command)
+
+    def add_commands_handler(self, commands):
+        for command in commands.split('\n'):
+            self.widget.add_tool_path(command, False)
+        self.widget.updateGL()
 
     def clear_handler(self):
         self.widget.clear_tool_paths()
@@ -141,17 +148,14 @@ class VisualisationWidget(QtOpenGL.QGLWidget):
             # print vertex
             self.qglColor(vertex['colour'])
 
-            if 'x' in vertex:
-                self.last_x_coord = float(vertex['x'])
-            if 'y' in vertex:
-                self.last_y_coord = float(vertex['y'])
-            if 'z' in vertex:
-                self.last_z_coord = float(vertex['z'])
+            # print vertex
+            # print "X:%f Y:%f Z:%f" % (
+            #    vertex['x'], vertex['y'], vertex['z'])
 
             GL.glVertex3f(
-                self.last_x_coord * 3,
-                self.last_y_coord * 3,
-                self.last_z_coord * 3)
+                float(vertex['x']) * 3,
+                float(vertex['y']) * 3,
+                float(vertex['z']) * 3)
 
         # TODO keep track of extents and zoom to fit
 
@@ -206,12 +210,13 @@ class VisualisationWidget(QtOpenGL.QGLWidget):
             'y': y,
             'z': z})
 
-    def add_tool_path(self, command):
+    def add_tool_path(self, command, update=False):
         if len(command) > 0:
             for vertex in self.parse_command(command):
                 self.vertices.append(vertex)
 
-            self.updateGL()
+            if update:
+                self.updateGL()
 
     def set_plane(self, command):
         match = re.search(r'^G([\d\.]+)', command)
@@ -243,9 +248,12 @@ class VisualisationWidget(QtOpenGL.QGLWidget):
                 self.z_offset_key = 'i'
 
     def parse_command(self, command):
+        # remove line number from the beginning of the command
+        command = re.sub(r'^N\d+ *', '', str(command))
+
         # ignore N line numbers when finding command number
         match = re.match(
-            r'^(?:N\d+ )?G(\d+)', command.trimmed(), re.IGNORECASE)
+            r'^G(\d+)', command.strip(), re.IGNORECASE)
 
         vertices = []
 
@@ -254,11 +262,9 @@ class VisualisationWidget(QtOpenGL.QGLWidget):
 
             if 0 <= movement_code <= 1:
                 vertex = self.parse_line(movement_code, command)
-                print vertex
                 vertices += vertex
             elif 2 <= movement_code <= 3:
                 vertex = self.parse_arc(movement_code, command)
-                print vertex
                 vertices += vertex
             elif 17 <= movement_code <= 19:
                 self.set_plane(match.group(0))
@@ -269,12 +275,12 @@ class VisualisationWidget(QtOpenGL.QGLWidget):
         command_codes = {}
 
         coords = re.findall(
-            r'([xyz]) *([\d\.]+)',
+            r'([xyz]) *([\-\+]?[\d\.]+)',
             command,
             re.IGNORECASE)
 
         for coord in coords:
-            command_codes[str(coord[0].toLower())] = coord[1]
+            command_codes[coord[0].lower()] = coord[1]
 
         colour = self.feed
         if movement_code == 0:
@@ -287,6 +293,14 @@ class VisualisationWidget(QtOpenGL.QGLWidget):
         for dimension in ['x', 'y', 'z']:
             if dimension in command_codes:
                 vertex[dimension] = float(command_codes[dimension])
+                setattr(
+                    self,
+                    'last_' + dimension + '_coord',
+                    vertex[dimension])
+            else:
+                vertex[dimension] = getattr(
+                    self,
+                    'last_' + dimension + '_coord')
 
         return [vertex]
 
@@ -307,7 +321,7 @@ class VisualisationWidget(QtOpenGL.QGLWidget):
 
         # fetch all provided coordinates
         for coord in coords:
-            command_codes[str(coord[0].toLower())] = float(coord[1])
+            command_codes[coord[0].lower()] = float(coord[1])
 
         # default finish coordinates to current
         for axis in ['x', 'y', 'z']:

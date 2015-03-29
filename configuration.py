@@ -59,6 +59,7 @@ class Config():
         default_config['connection']['port']['flow_control'] = 'rtscts'
 
         default_config['ui']['spindle_speed_index'] = 0
+        default_config['ui']['show_visualiser'] = False
         default_config['ui']['jog_step_index'] = 3
         default_config['ui']['feed_rate_index'] = 4
         default_config['ui']['spindle_direction'] = 0
