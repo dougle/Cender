@@ -14,7 +14,7 @@ from functools import partial
 from options_window import OptionsWindow
 from about_window import AboutWindow
 
-from visualisation import VisualisationWidget
+from visualisation import VisualisationWidget, Visualiser
 
 import struct
 
@@ -64,6 +64,7 @@ class MainWindow(QtGui.QMainWindow):
         pub.subscribe(self.units_received_handler, 'units-received')
         pub.subscribe(self.dist_mode_received_handler, 'dist-mode-received')
         pub.subscribe(self.connect_received_handler, 'connect-received')
+        pub.subscribe(self.config_changed_handler, 'config-changed')
         pub.subscribe(self.config_fetched_handler, 'config-fetched')
         pub.subscribe(self.disconnect_received_handler, 'disconnect-received')
         pub.subscribe(self.programme_progress_handler, 'programme-progress')
@@ -103,6 +104,9 @@ class MainWindow(QtGui.QMainWindow):
                 self.controller.reset_axis(
                     axis_letter.upper(),
                     conf.get('last_positions.' + axis_letter.lower()))
+
+    def config_changed_handler(self, id):
+        self.logger.debug('controller Config changed signal received')
 
     def config_fetched_handler(self):
         self.logger.debug('controller Config signal received')
@@ -175,6 +179,10 @@ controller to %s?
         # saving last known coordinates
         self.controller.track_coordinates = True
 
+        self.visualiser.set_config.emit(
+            'chord',
+            float(self.controller.chord_length()))
+
     def timer_tick_handler(self, total):
         # self.logger.debug('timer_tick_handler ' + str(total))
         self.ui.lblOutputRuntime.setText(self.format_time(total))
@@ -223,7 +231,7 @@ controller to %s?
         self.toggle_axis_visibility(axis_letter, True)
 
     def position_received_handler(self, axis_letter, position):
-        self.visualiser.setToolAxisPosition(axis_letter, position)
+        self.visualiser.tool_position.emit(axis_letter, position)
         self.update_lcd(axis_letter, position)
 
     def velocity_received_handler(self, velocity):
@@ -428,8 +436,12 @@ controller to %s?
         # self.camera_thread.frameWidget = self.ui.cameraFrame
         # self.camera_thread.start()
 
-        self.visualiser = VisualisationWidget()
-        self.ui.visualiserContainer.addWidget(self.visualiser)
+        self.visualiserWidget = VisualisationWidget()
+        self.ui.visualiserContainer.addWidget(self.visualiserWidget)
+
+        self.visualiser = Visualiser(self.visualiserWidget)
+        self.visualiser.daemon = True
+        self.visualiser.start()
 
         # testing the visualisation widget without having
         # a board connected
@@ -765,7 +777,7 @@ controller to %s?
             self.ui.btnStart.setEnabled(True)
 
             # send the file to the visualiser
-            self.visualiser.clearToolPaths()
+            self.visualiser.clear.emit()
 
             content = ''
             with open(file_path) as f:
@@ -777,7 +789,7 @@ controller to %s?
 
             if content is not None and content != '':
                 for command in content.split('\n'):
-                    self.visualiser.addToolPath(command)
+                    self.visualiser.add_command.emit(command)
 
     def spindle_toggle(self):
         # filter and cast spindle speed

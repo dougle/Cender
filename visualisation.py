@@ -6,10 +6,45 @@ from OpenGL import GL, GLU, GLUT
 from PyQt4 import QtCore, QtGui, QtOpenGL
 
 
+class Visualiser(QtCore.QThread):
+
+    add_command = QtCore.pyqtSignal(str)
+    clear = QtCore.pyqtSignal()
+    set_config = QtCore.pyqtSignal(str, float)
+    tool_position = QtCore.pyqtSignal(str, float)
+
+    def __init__(self, widget=None, parent=None):
+        QtCore.QThread.__init__(self, parent)
+        self.logger = logging.getLogger(__name__)
+
+        self.widget = widget
+
+        self.add_command.connect(self.add_command_handler)
+        self.clear.connect(self.clear_handler)
+        self.set_config.connect(self.set_config_handler)
+        self.tool_position.connect(self.tool_position_handler)
+
+    def add_command_handler(self, command):
+        self.widget.add_tool_path(command)
+
+    def clear_handler(self):
+        self.widget.clear_tool_paths()
+
+    def set_config_handler(self, config, value):
+        if config == 'chord':
+            self.widget.set_chord_length(value)
+
+    def tool_position_handler(self, axis_letter, position):
+        self.widget.set_tool_axis_position(axis_letter, position)
+
+    def run(self):
+        True
+
+
 class VisualisationWidget(QtOpenGL.QGLWidget):
-    xRotationChanged = QtCore.pyqtSignal(int)
-    yRotationChanged = QtCore.pyqtSignal(int)
-    zRotationChanged = QtCore.pyqtSignal(int)
+    x_rotationChanged = QtCore.pyqtSignal(int)
+    y_rotationChanged = QtCore.pyqtSignal(int)
+    z_rotationChanged = QtCore.pyqtSignal(int)
 
     def __init__(self, parent=None):
         super(VisualisationWidget, self).__init__(parent)
@@ -24,21 +59,23 @@ class VisualisationWidget(QtOpenGL.QGLWidget):
         self.z_offset_key = 'k'
 
         self.object = None
-        self.xRot = 2880
-        self.yRot = 0
-        self.zRot = 0
+        self.x_rot = 2880
+        self.y_rot = 0
+        self.z_rot = 0
 
-        self.xPos = 0
-        self.yPos = 0
-        self.zPos = 10
+        self.x_pos = 0
+        self.y_pos = 0
+        self.z_pos = 10
 
         self.tool_x = 0
         self.tool_y = 0
         self.tool_z = 0
 
-        self.lastXCoord = 0
-        self.lastYCoord = 0
-        self.lastZCoord = 0
+        self.last_x_coord = 0
+        self.last_y_coord = 0
+        self.last_z_coord = 0
+
+        self.chord_length = 0.1
 
         self.vertices = []
 
@@ -55,110 +92,46 @@ class VisualisationWidget(QtOpenGL.QGLWidget):
         GLU.gluQuadricNormals(self.quadric, GLU.GLU_SMOOTH)
         GLU.gluQuadricTexture(self.quadric, GL.GL_TRUE)
 
-    def minimumSizeHint(self):
-        return QtCore.QSize(50, 50)
+    def set_chord_length(self, length):
+        self.chord_length = float(length)
 
-    def sizeHint(self):
-        return QtCore.QSize(400, 400)
-
-    def setXRotation(self, angle):
-        angle = self.normalizeAngle(angle)
-        if angle != self.xRot:
-            self.xRot = angle
-            self.xRotationChanged.emit(angle)
+    def set_x_rotation(self, angle):
+        angle = self.normalize_angle(angle)
+        if angle != self.x_rot:
+            self.x_rot = angle
+            self.x_rotationChanged.emit(angle)
             self.updateGL()
 
-    def setYRotation(self, angle):
-        angle = self.normalizeAngle(angle)
-        if angle != self.yRot:
-            self.yRot = angle
-            self.yRotationChanged.emit(angle)
+    def set_y_rotation(self, angle):
+        angle = self.normalize_angle(angle)
+        if angle != self.y_rot:
+            self.y_rot = angle
+            self.y_rotationChanged.emit(angle)
             self.updateGL()
 
-    def setXPosition(self, coord):
+    def set_x_position(self, coord):
         # print "X is "+str(coord)
-        self.xPos = coord
+        self.x_pos = coord
         self.updateGL()
 
-    def setYPosition(self, coord):
+    def set_y_position(self, coord):
         # print "Y is "+str(coord)
-        self.yPos = coord
+        self.y_pos = coord
         self.updateGL()
 
-    def setZPosition(self, coord):
+    def set_z_position(self, coord):
         # print "Z is "+str(coord)
-        self.zPos = max(10, coord)
+        self.z_pos = max(10, coord)
         self.updateGL()
 
-    # def setZRotation(self, angle):
-    #     angle = self.normalizeAngle(angle)
-    #     if angle != self.zRot:
-    #         self.zRot = angle
-    #         self.zRotationChanged.emit(angle)
-    #         self.updateGL()
-
-    def initializeGL(self):
-        self.qglClearColor(self.background)
-        GL.glShadeModel(GL.GL_FLAT)
-        GL.glEnable(GL.GL_DEPTH_TEST)
-        GL.glEnable(GL.GL_CULL_FACE)
-
-        self.tool_list = GL.glGenLists(1)
-        self.tool_path_list = GL.glGenLists(1)
-
-    def paintGL(self):
-        GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT)
-        GL.glLoadIdentity()
-        GL.glOrtho(-self.zPos, self.zPos, self.zPos, -self.zPos,
-                   self.zPos + 999, -self.zPos - 999)
-        GL.glTranslated(self.xPos, self.yPos, 0)
-        GL.glRotated(self.xRot / 16.0, 1.0, 0.0, 0.0)
-        GL.glRotated(self.yRot / 16.0, 0.0, 1.0, 0.0)
-        GL.glRotated(self.zRot / 16.0, 0.0, 0.0, 1.0)
-
-        self.renderToolPaths()
-        self.renderTool()
-
-        GL.glCallList(self.tool_path_list)
-        GL.glCallList(self.tool_list)
-
-    def resizeGL(self, width, height):
-        GL.glViewport(0, 0, width, height)
-
-        GL.glMatrixMode(GL.GL_PROJECTION)
-        GL.glLoadIdentity()
-        GL.glOrtho(-self.zPos, self.zPos, -self.zPos, +self.zPos,
-                   self.zPos + 999, -self.zPos - 999)
-        GL.glMatrixMode(GL.GL_MODELVIEW)
-
-    def wheelEvent(self, event):
-        self.zPos += (event.delta() / 10)
-        self.setZPosition(self.zPos)
-
-    def mousePressEvent(self, event):
-        self.lastPos = event.pos()
-
-    def mouseMoveEvent(self, event):
-        dx = event.x() - self.lastPos.x()
-        dy = event.y() - self.lastPos.y()
-
-        if event.buttons() & QtCore.Qt.LeftButton:
-            self.setXRotation(self.xRot + 8 * dy)
-            self.setYRotation(self.yRot + 8 * dx)
-
-            self.lastPos = event.pos()
-        elif event.buttons() & QtCore.Qt.RightButton:
-            self.setXPosition(dx)
-            self.setYPosition(dy)
-
-    def normalizeAngle(self, angle):
+    def normalize_angle(self, angle):
         while angle < 0:
             angle += 360 * 16
         while angle > 360 * 16:
             angle -= 360 * 16
         return angle
 
-    def renderToolPaths(self):
+    def render_tool_paths(self):
         GL.glNewList(self.tool_path_list, GL.GL_COMPILE)
 
         GL.glBegin(GL.GL_LINE_STRIP)
@@ -169,23 +142,23 @@ class VisualisationWidget(QtOpenGL.QGLWidget):
             self.qglColor(vertex['colour'])
 
             if 'x' in vertex:
-                self.lastXCoord = float(vertex['x'])
+                self.last_x_coord = float(vertex['x'])
             if 'y' in vertex:
-                self.lastYCoord = float(vertex['y'])
+                self.last_y_coord = float(vertex['y'])
             if 'z' in vertex:
-                self.lastZCoord = float(vertex['z'])
+                self.last_z_coord = float(vertex['z'])
 
             GL.glVertex3f(
-                self.lastXCoord * 3,
-                self.lastYCoord * 3,
-                self.lastZCoord * 3)
+                self.last_x_coord * 3,
+                self.last_y_coord * 3,
+                self.last_z_coord * 3)
 
         # TODO keep track of extents and zoom to fit
 
         GL.glEnd()
         GL.glEndList()
 
-    def renderTool(self):
+    def render_tool(self):
         GL.glNewList(self.tool_list, GL.GL_COMPILE)
 
         # draw cone
@@ -209,14 +182,14 @@ class VisualisationWidget(QtOpenGL.QGLWidget):
 
         GL.glEndList()
 
-    def clearToolPaths(self):
+    def clear_tool_paths(self):
         self.vertices = []
         self.updateGL()
 
-    def setToolAxisPosition(self, axis_letter, position):
-        setattr(self, 'tool_' + axis_letter.lower(), position)
+    def set_tool_axis_position(self, axis_letter, position):
+        setattr(self, str('tool_' + axis_letter.toLower()), float(position))
 
-    def setToolPosition(self, x=None, y=None, z=None):
+    def set_tool_position(self, x=None, y=None, z=None):
         if x is not None:
             self.tool_x = x
         if y is not None:
@@ -226,21 +199,21 @@ class VisualisationWidget(QtOpenGL.QGLWidget):
 
         self.updateGL()
 
-    def setCurrentPosition(self, x, y, z):
+    def set_current_position(self, x, y, z):
         self.vertices.append({
             'colour': self.blank,
             'x': x,
             'y': y,
             'z': z})
 
-    def addToolPath(self, command):
+    def add_tool_path(self, command):
         if len(command) > 0:
-            for vertex in self.parseCommand(command):
+            for vertex in self.parse_command(command):
                 self.vertices.append(vertex)
 
             self.updateGL()
 
-    def setPlane(self, command):
+    def set_plane(self, command):
         match = re.search(r'^G([\d\.]+)', command)
         if match is not None:
             plane = match.group(1)
@@ -269,10 +242,10 @@ class VisualisationWidget(QtOpenGL.QGLWidget):
                 self.y_offset_key = 'k'
                 self.z_offset_key = 'i'
 
-    def parseCommand(self, command):
+    def parse_command(self, command):
         # ignore N line numbers when finding command number
         match = re.match(
-            r'^(?:N\d+ )?G(\d+)', str(command).strip(), re.IGNORECASE)
+            r'^(?:N\d+ )?G(\d+)', command.trimmed(), re.IGNORECASE)
 
         vertices = []
 
@@ -280,11 +253,15 @@ class VisualisationWidget(QtOpenGL.QGLWidget):
             movement_code = int(match.group(1))
 
             if 0 <= movement_code <= 1:
-                vertices += self.parse_line(movement_code, command)
+                vertex = self.parse_line(movement_code, command)
+                print vertex
+                vertices += vertex
             elif 2 <= movement_code <= 3:
-                vertices += self.parse_arc(movement_code, command)
+                vertex = self.parse_arc(movement_code, command)
+                print vertex
+                vertices += vertex
             elif 17 <= movement_code <= 19:
-                self.setPlane(match.group(0))
+                self.set_plane(match.group(0))
 
         return vertices
 
@@ -297,7 +274,7 @@ class VisualisationWidget(QtOpenGL.QGLWidget):
             re.IGNORECASE)
 
         for coord in coords:
-            command_codes[coord[0].lower()] = coord[1]
+            command_codes[str(coord[0].toLower())] = coord[1]
 
         colour = self.feed
         if movement_code == 0:
@@ -305,7 +282,7 @@ class VisualisationWidget(QtOpenGL.QGLWidget):
 
         vertex = {
             'colour': colour,
-            'command': command}
+            'command': str(command)}
 
         for dimension in ['x', 'y', 'z']:
             if dimension in command_codes:
@@ -315,12 +292,12 @@ class VisualisationWidget(QtOpenGL.QGLWidget):
 
     def parse_arc(self, movement_code, command):
         # print command
-        # print "lastx %f lasty %f lastz %f" % (self.lastXCoord,
-        # self.lastYCoord, self.lastZCoord)
+        # print "lastx %f lasty %f lastz %f" % (self.last_x_coord,
+        # self.last_y_coord, self.last_z_coord)
 
-        last_x = getattr(self, 'last' + self.x_key.upper() + 'Coord')
-        last_y = getattr(self, 'last' + self.y_key.upper() + 'Coord')
-        last_z = getattr(self, 'last' + self.z_key.upper() + 'Coord')
+        last_x = getattr(self, 'last_' + self.x_key + '_coord')
+        last_y = getattr(self, 'last_' + self.y_key + '_coord')
+        last_z = getattr(self, 'last_' + self.z_key + '_coord')
         command_codes = {}
 
         coords = re.findall(
@@ -330,15 +307,15 @@ class VisualisationWidget(QtOpenGL.QGLWidget):
 
         # fetch all provided coordinates
         for coord in coords:
-            command_codes[coord[0].lower()] = float(coord[1])
+            command_codes[str(coord[0].toLower())] = float(coord[1])
 
         # default finish coordinates to current
         for axis in ['x', 'y', 'z']:
             if axis not in command_codes:
                 attr_name = ''.join([
-                    'last',
-                    getattr(self, axis + '_key').upper(),
-                    'Coord'])
+                    'last_',
+                    getattr(self, axis + '_key'),
+                    '_coord'])
                 command_codes[axis] = getattr(
                     self, attr_name)
 
@@ -445,7 +422,7 @@ class VisualisationWidget(QtOpenGL.QGLWidget):
         # max_angle = (max_angle * direction)
 
         current_angle = angle_of_each_chord = (
-            (0.1 / (2 * math.pi * radius) * (2 * math.pi)))
+            (self.chord_length / (2 * math.pi * radius)) * (2 * math.pi))
         z_offset_per_chord = (dz * (angle_of_each_chord / max_angle))
 
         # print "max_angle %f angle_of_each_chord %f z_offset_per_chord %f
@@ -487,8 +464,70 @@ class VisualisationWidget(QtOpenGL.QGLWidget):
                 current_angle = max_angle
             step += 1
 
-        setattr(self, 'last' + self.x_key.upper() + 'Coord', new_x)
-        setattr(self, 'last' + self.y_key.upper() + 'Coord', new_y)
-        setattr(self, 'last' + self.z_key.upper() + 'Coord', new_z)
+        setattr(self, 'last_' + self.x_key + '_coord', new_x)
+        setattr(self, 'last_' + self.y_key + '_coord', new_y)
+        setattr(self, 'last_' + self.z_key + '_coord', new_z)
 
         return vertices
+
+    # inherited methods
+    def minimumSizeHint(self):
+        return QtCore.QSize(50, 50)
+
+    def sizeHint(self):
+        return QtCore.QSize(400, 400)
+
+    def initializeGL(self):
+        self.qglClearColor(self.background)
+        GL.glShadeModel(GL.GL_FLAT)
+        GL.glEnable(GL.GL_DEPTH_TEST)
+        GL.glEnable(GL.GL_CULL_FACE)
+
+        self.tool_list = GL.glGenLists(1)
+        self.tool_path_list = GL.glGenLists(1)
+
+    def paintGL(self):
+        GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT)
+        GL.glLoadIdentity()
+        GL.glOrtho(-self.z_pos, self.z_pos, self.z_pos, -self.z_pos,
+                   self.z_pos + 999, -self.z_pos - 999)
+        GL.glTranslated(self.x_pos, self.y_pos, 0)
+        GL.glRotated(self.x_rot / 16.0, 1.0, 0.0, 0.0)
+        GL.glRotated(self.y_rot / 16.0, 0.0, 1.0, 0.0)
+        GL.glRotated(self.z_rot / 16.0, 0.0, 0.0, 1.0)
+
+        self.render_tool_paths()
+        self.render_tool()
+
+        GL.glCallList(self.tool_path_list)
+        GL.glCallList(self.tool_list)
+
+    def resizeGL(self, width, height):
+        GL.glViewport(0, 0, width, height)
+
+        GL.glMatrixMode(GL.GL_PROJECTION)
+        GL.glLoadIdentity()
+        GL.glOrtho(-self.z_pos, self.z_pos, -self.z_pos, +self.z_pos,
+                   self.z_pos + 999, -self.z_pos - 999)
+        GL.glMatrixMode(GL.GL_MODELVIEW)
+
+    # inherited event handlers
+    def wheelEvent(self, event):
+        self.z_pos += (event.delta() / 10)
+        self.set_z_position(self.z_pos)
+
+    def mousePressEvent(self, event):
+        self.lastPos = event.pos()
+
+    def mouseMoveEvent(self, event):
+        dx = event.x() - self.lastPos.x()
+        dy = event.y() - self.lastPos.y()
+
+        if event.buttons() & QtCore.Qt.LeftButton:
+            self.set_x_rotation(self.x_rot + 8 * dy)
+            self.set_y_rotation(self.y_rot + 8 * dx)
+
+            self.lastPos = event.pos()
+        elif event.buttons() & QtCore.Qt.RightButton:
+            self.set_x_position(dx)
+            self.set_y_position(dy)

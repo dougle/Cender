@@ -717,3 +717,6 @@ class ControllerBoard(QtCore.QObject):
 
     def add_tab_to_config(self, ui):
         return None
+
+    def chord_length(self):
+        return 0.2

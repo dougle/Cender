@@ -164,8 +164,9 @@ class TinyG(ControllerBoard):
                     if len(groups) == 4:
                         self.board_config[groups[0]]['units'] = groups[3]
 
+                    pub.sendMessage('config-changed', id=groups[0])
                 except IndexError:
-                    print groups
+                    # print groups
                     self.logger.debug(
                         'IndexError: ' + line + '\n' + str(len(groups)))
 
@@ -206,7 +207,7 @@ class TinyG(ControllerBoard):
 
                     if self.track_coordinates:
                         conf.set(
-                            'last_positions.' + axis_letter.lower(),
+                            'last_positions.' + axis_letter.toLower(),
                             float(coordinate))
 
             if 'vel' in response['sr']:
@@ -504,7 +505,7 @@ class TinyG(ControllerBoard):
 
     def find_axis_home(self, axis_letter):
         self.logger.debug('Find home for ' + axis_letter)
-        if self.installed_homes.count(str(axis_letter).lower()) > 0:
+        if self.installed_homes.count(axis_letter.toLower()) > 0:
             command = 'G28.2 ' + axis_letter + '0'
             if conf.get('common.add_gcode_comments_for_system_commands'):
                 command += ' (homing ' + axis_letter + ' axis)'
@@ -729,3 +730,7 @@ class TinyG(ControllerBoard):
                             '$' + self.board_config[config_item]['id'] + '=' +
                             self.board_config[config_item]['value'] + ' (' +
                             self.board_config[config_item]['message'] + ')\n')
+
+    def chord_length(self):
+        # return twice the chordal tollerance
+        return (self.board_config['ct']['value'] * 2)
