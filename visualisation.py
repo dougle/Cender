@@ -58,6 +58,7 @@ class VisualisationWidget(QtOpenGL.QGLWidget):
 
         self.logger = logging.getLogger(__name__)
 
+        # used to switch planes easier
         self.x_key = 'x'
         self.y_key = 'y'
         self.z_key = 'z'
@@ -65,11 +66,10 @@ class VisualisationWidget(QtOpenGL.QGLWidget):
         self.y_offset_key = 'j'
         self.z_offset_key = 'k'
 
-        self.object = None
+        # used to track the viewport
         self.x_rot = 2880
         self.y_rot = 0
         self.z_rot = 0
-
         self.x_pos = 0
         self.y_pos = 0
         self.z_pos = 10
@@ -82,12 +82,22 @@ class VisualisationWidget(QtOpenGL.QGLWidget):
         self.last_y_coord = 0
         self.last_z_coord = 0
 
-        self.chord_length = 0.1
 
+        # used to store the verteices currently on
+        # screen
         self.vertices = []
 
-        self.lastPos = QtCore.QPoint()
+        # a default value for converting arcs
+        # to sets of chords and vertices
+        self.chord_length = 0.1
 
+        # used to store the center point after
+        # mouse events
+        self.last_pos = QtCore.QPoint()
+
+        self.coordinate_scale = 3
+
+        # colours for each type of graphic
         self.background = QtGui.QColor.fromCmykF(0, 0, 0, 1)
         self.blank = QtGui.QColor.fromRgbF(0, 0, 0, 1)
         self.rapid = QtGui.QColor.fromCmykF(0, 0.99, 1, 0)
@@ -98,6 +108,23 @@ class VisualisationWidget(QtOpenGL.QGLWidget):
         # // Create Smooth Normals
         GLU.gluQuadricNormals(self.quadric, GLU.GLU_SMOOTH)
         GLU.gluQuadricTexture(self.quadric, GL.GL_TRUE)
+
+    def setup_projection(self):
+        print "left:%f right:%f bottom:%f top:%f near:%f far:%f" % (
+            -self.z_pos,
+            self.z_pos,
+            -self.z_pos,
+            self.z_pos,
+            self.z_pos + 999,
+            -self.z_pos - 999)
+
+        GL.glOrtho(
+            -self.z_pos,
+            self.z_pos,
+            self.z_pos,
+            -self.z_pos,
+            self.z_pos + 999,
+            -self.z_pos - 999)
 
     def set_chord_length(self, length):
         self.chord_length = float(length)
@@ -118,12 +145,12 @@ class VisualisationWidget(QtOpenGL.QGLWidget):
 
     def set_x_position(self, coord):
         # print "X is "+str(coord)
-        self.x_pos = coord
+        self.x_pos += ((coord * self.z_pos) / (self.coordinate_scale*15))
         self.updateGL()
 
     def set_y_position(self, coord):
         # print "Y is "+str(coord)
-        self.y_pos = coord
+        self.y_pos += ((coord * self.z_pos) / (self.coordinate_scale*15))
         self.updateGL()
 
     def set_z_position(self, coord):
@@ -151,11 +178,15 @@ class VisualisationWidget(QtOpenGL.QGLWidget):
             # print vertex
             # print "X:%f Y:%f Z:%f" % (
             #    vertex['x'], vertex['y'], vertex['z'])
+            
+            scaled_x = vertex['x'] * self.coordinate_scale
+            scaled_y = vertex['y'] * self.coordinate_scale
+            scaled_z = vertex['z'] * self.coordinate_scale
 
             GL.glVertex3f(
-                float(vertex['x']) * 3,
-                float(vertex['y']) * 3,
-                float(vertex['z']) * 3)
+                scaled_x,
+                scaled_y,
+                scaled_z)
 
         # TODO keep track of extents and zoom to fit
 
@@ -206,9 +237,9 @@ class VisualisationWidget(QtOpenGL.QGLWidget):
     def set_current_position(self, x, y, z):
         self.vertices.append({
             'colour': self.blank,
-            'x': x,
-            'y': y,
-            'z': z})
+            'x': float(x),
+            'y': float(y),
+            'z': float(z)})
 
     def add_tool_path(self, command, update=False):
         if len(command) > 0:
@@ -503,9 +534,12 @@ class VisualisationWidget(QtOpenGL.QGLWidget):
     def paintGL(self):
         GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT)
         GL.glLoadIdentity()
-        GL.glOrtho(-self.z_pos, self.z_pos, self.z_pos, -self.z_pos,
-                   self.z_pos + 999, -self.z_pos - 999)
-        GL.glTranslated(self.x_pos, self.y_pos, 0)
+        
+        self.setup_projection()
+
+        print "x_pos:%f y_pos:%f" % (self.x_pos, -self.y_pos)
+
+        GL.glTranslated(self.x_pos, -self.y_pos, 0)
         GL.glRotated(self.x_rot / 16.0, 1.0, 0.0, 0.0)
         GL.glRotated(self.y_rot / 16.0, 0.0, 1.0, 0.0)
         GL.glRotated(self.z_rot / 16.0, 0.0, 0.0, 1.0)
@@ -521,9 +555,13 @@ class VisualisationWidget(QtOpenGL.QGLWidget):
 
         GL.glMatrixMode(GL.GL_PROJECTION)
         GL.glLoadIdentity()
-        GL.glOrtho(-self.z_pos, self.z_pos, -self.z_pos, +self.z_pos,
-                   self.z_pos + 999, -self.z_pos - 999)
+        
+        self.setup_projection()
+
         GL.glMatrixMode(GL.GL_MODELVIEW)
+
+        self.viewport_width = width
+        self.viewport_height = height
 
     # inherited event handlers
     def wheelEvent(self, event):
@@ -531,17 +569,18 @@ class VisualisationWidget(QtOpenGL.QGLWidget):
         self.set_z_position(self.z_pos)
 
     def mousePressEvent(self, event):
-        self.lastPos = event.pos()
+        self.last_pos = event.pos()
 
     def mouseMoveEvent(self, event):
-        dx = event.x() - self.lastPos.x()
-        dy = event.y() - self.lastPos.y()
+        dx = event.x() - self.last_pos.x()
+        dy = event.y() - self.last_pos.y()
 
         if event.buttons() & QtCore.Qt.LeftButton:
             self.set_x_rotation(self.x_rot + 8 * dy)
             self.set_y_rotation(self.y_rot + 8 * dx)
 
-            self.lastPos = event.pos()
         elif event.buttons() & QtCore.Qt.RightButton:
             self.set_x_position(dx)
             self.set_y_position(dy)
+
+        self.last_pos = event.pos()
