@@ -442,6 +442,7 @@ controller to %s?
         self.visualiser = Visualiser(self.visualiserWidget)
         self.visualiser.daemon = True
         self.visualiser.start()
+        self.visualiserWidget.doneCurrent()
 
         # testing the visualisation widget without having
         # a board connected

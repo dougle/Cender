@@ -67,7 +67,7 @@ class VisualisationWidget(QtOpenGL.QGLWidget):
         self.z_offset_key = 'k'
 
         # used to track the viewport
-        self.x_rot = 2880
+        self.x_rot = 0
         self.y_rot = 0
         self.z_rot = 0
         self.x_pos = 0
@@ -109,14 +109,19 @@ class VisualisationWidget(QtOpenGL.QGLWidget):
         GLU.gluQuadricNormals(self.quadric, GLU.GLU_SMOOTH)
         GLU.gluQuadricTexture(self.quadric, GL.GL_TRUE)
 
+        # some flags for what to update in paintGL
+        self.update_transform = True
+        self.update_rotation = True
+        self.update_vertices = True
+
     def setup_projection(self):
-        print "left:%f right:%f bottom:%f top:%f near:%f far:%f" % (
-            -self.z_pos,
-            self.z_pos,
-            -self.z_pos,
-            self.z_pos,
-            self.z_pos + 999,
-            -self.z_pos - 999)
+        # print "left:%f right:%f bottom:%f top:%f near:%f far:%f" % (
+        #     -self.z_pos,
+        #     self.z_pos,
+        #     -self.z_pos,
+        #     self.z_pos,
+        #     self.z_pos + 999,
+        #     -self.z_pos - 999)
 
         GL.glOrtho(
             -self.z_pos,
@@ -126,31 +131,36 @@ class VisualisationWidget(QtOpenGL.QGLWidget):
             self.z_pos + 999,
             -self.z_pos - 999)
 
+
     def set_chord_length(self, length):
         self.chord_length = float(length)
 
     def set_x_rotation(self, angle):
         angle = self.normalize_angle(angle)
-        if angle != self.x_rot:
-            self.x_rot = angle
-            self.x_rotationChanged.emit(angle)
-            self.updateGL()
+        #if angle != self.x_rot:
+        self.x_rot = angle
+        self.x_rotationChanged.emit(angle)
+        self.update_rotation = True
+        self.updateGL()
 
     def set_y_rotation(self, angle):
         angle = self.normalize_angle(angle)
-        if angle != self.y_rot:
-            self.y_rot = angle
-            self.y_rotationChanged.emit(angle)
-            self.updateGL()
+        #if angle != self.y_rot:
+        self.y_rot = angle
+        self.y_rotationChanged.emit(angle)
+        self.update_rotation = True
+        self.updateGL()
 
     def set_x_position(self, coord):
         # print "X is "+str(coord)
         self.x_pos += ((coord * self.z_pos) / (self.coordinate_scale*15))
+        self.update_transform = True
         self.updateGL()
 
     def set_y_position(self, coord):
         # print "Y is "+str(coord)
         self.y_pos += ((coord * self.z_pos) / (self.coordinate_scale*15))
+        self.update_transform = True
         self.updateGL()
 
     def set_z_position(self, coord):
@@ -159,11 +169,7 @@ class VisualisationWidget(QtOpenGL.QGLWidget):
         self.updateGL()
 
     def normalize_angle(self, angle):
-        while angle < 0:
-            angle += 360 * 16
-        while angle > 360 * 16:
-            angle -= 360 * 16
-        return angle
+        return (angle % (360 * 16))
 
     def render_tool_paths(self):
         GL.glNewList(self.tool_path_list, GL.GL_COMPILE)
@@ -219,6 +225,7 @@ class VisualisationWidget(QtOpenGL.QGLWidget):
 
     def clear_tool_paths(self):
         self.vertices = []
+        self.update_vertices = True
         self.updateGL()
 
     def set_tool_axis_position(self, axis_letter, position):
@@ -232,6 +239,7 @@ class VisualisationWidget(QtOpenGL.QGLWidget):
         if z is not None:
             self.tool_z = z
 
+        self.update_vertices = True
         self.updateGL()
 
     def set_current_position(self, x, y, z):
@@ -241,12 +249,15 @@ class VisualisationWidget(QtOpenGL.QGLWidget):
             'y': float(y),
             'z': float(z)})
 
+        self.update_vertices = True
+
     def add_tool_path(self, command, update=False):
         if len(command) > 0:
             for vertex in self.parse_command(command):
                 self.vertices.append(vertex)
 
             if update:
+                self.update_vertices = True
                 self.updateGL()
 
     def set_plane(self, command):
@@ -532,23 +543,33 @@ class VisualisationWidget(QtOpenGL.QGLWidget):
         self.tool_path_list = GL.glGenLists(1)
 
     def paintGL(self):
-        GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT)
-        GL.glLoadIdentity()
+        if self.update_vertices:
+            GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT)
+            GL.glLoadIdentity()
         
         self.setup_projection()
+        
+        if self.update_transform or self.update_rotation:
 
-        print "x_pos:%f y_pos:%f" % (self.x_pos, -self.y_pos)
+            # print "x_pos:%f y_pos:%f" % (self.x_pos, self.y_pos)
 
-        GL.glTranslated(self.x_pos, -self.y_pos, 0)
-        GL.glRotated(self.x_rot / 16.0, 1.0, 0.0, 0.0)
-        GL.glRotated(self.y_rot / 16.0, 0.0, 1.0, 0.0)
-        GL.glRotated(self.z_rot / 16.0, 0.0, 0.0, 1.0)
+            GL.glTranslated(self.x_pos, self.y_pos, 0)
+            self.update_transform = False
 
-        self.render_tool_paths()
-        self.render_tool()
+            # print "x_rot:%f y_rot:%f" % (self.x_rot, self.y_rot)
 
-        GL.glCallList(self.tool_path_list)
-        GL.glCallList(self.tool_list)
+            GL.glRotated(self.x_rot / 16.0, 1.0, 0.0, 0.0)
+            GL.glRotated(self.y_rot / 16.0, 0.0, 1.0, 0.0)
+            # GL.glRotated(self.z_rot / 16.0, 0.0, 0.0, 1.0)
+
+            self.update_rotation = False
+
+        if self.update_vertices:
+            self.render_tool_paths()
+            self.render_tool()
+
+            GL.glCallList(self.tool_path_list)
+            GL.glCallList(self.tool_list)
 
     def resizeGL(self, width, height):
         GL.glViewport(0, 0, width, height)
@@ -556,6 +577,8 @@ class VisualisationWidget(QtOpenGL.QGLWidget):
         GL.glMatrixMode(GL.GL_PROJECTION)
         GL.glLoadIdentity()
         
+        self.update_projection = True
+
         self.setup_projection()
 
         GL.glMatrixMode(GL.GL_MODELVIEW)
@@ -581,6 +604,6 @@ class VisualisationWidget(QtOpenGL.QGLWidget):
 
         elif event.buttons() & QtCore.Qt.RightButton:
             self.set_x_position(dx)
-            self.set_y_position(dy)
+            self.set_y_position(dy *-1)
 
         self.last_pos = event.pos()
