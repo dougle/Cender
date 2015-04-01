@@ -270,6 +270,11 @@ class ControllerBoard(QtCore.QObject):
         pub.subscribe(self.start_of_file_handler, 'start-of-file-received')
         pub.subscribe(self.end_of_file_handler, 'end-of-file-received')
 
+    def disconnect(self):
+        self.port.close()
+        self.sender_thread.reset()
+        self.listener_thread.exit()
+
     def queue_size_handler(self, size):
         if self.sender_thread is not None and self.sender_thread.isRunning():
             # block only the default sender thread

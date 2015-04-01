@@ -59,13 +59,14 @@ class TinyG(ControllerBoard):
         return False
 
     def disconnect(self):
-        # super(TinyG, self).disconnect()
-        self.main_window.set_comm_status('Disconnecting')
-        self.logger.debug('Disconnecting from TinyG')
         try:
+            self.main_window.set_comm_status('Disconnecting')
+            self.logger.debug('Disconnecting from TinyG')
+            super(TinyG, self).disconnect()
+
             self.logger.debug('Disconnection from TinyG succeeded')
 
-            pub.sendMessage('disconnectReceived')
+            pub.sendMessage('disconnect-received')
 
             return True
         except:
@@ -110,7 +111,7 @@ class TinyG(ControllerBoard):
             pub.subscribe(self.connect_received_handler, 'connect-received')
             self.echo_back('connect')
 
-            time.sleep(10)
+            time.sleep(1)
             if not self.connected:
                 raise Exception()
         except:
@@ -288,8 +289,11 @@ class TinyG(ControllerBoard):
             match = re.search(session_re, response['msg'])
 
             if match is not None:
-                pub.sendMessage(
-                    re.sub(session_re, '', response['msg']) + '-received')
+                try:
+                    pub.sendMessage(
+                        re.sub(session_re, '', response['msg']) + '-received')
+                except:
+                    pass
                 return False
 
         return True
