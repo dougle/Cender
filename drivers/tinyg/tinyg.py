@@ -58,22 +58,6 @@ class TinyG(ControllerBoard):
             return True
         return False
 
-    def disconnect(self):
-        try:
-            self.main_window.set_comm_status('Disconnecting')
-            self.logger.debug('Disconnecting from TinyG')
-            super(TinyG, self).disconnect()
-
-            self.logger.debug('Disconnection from TinyG succeeded')
-
-            pub.sendMessage('disconnect-received')
-
-            return True
-        except:
-            self.logger.debug('Disconnection from TinyG failed')
-            self.connected = True
-            return False
-
     def statusInterval(self):
         interval = super(TinyG, self).statusInterval()
         if 'si' in self.board_config:

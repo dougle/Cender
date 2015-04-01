@@ -66,7 +66,8 @@ class MainWindow(QtGui.QMainWindow):
         pub.subscribe(self.connect_received_handler, 'connect-received')
         pub.subscribe(self.config_changed_handler, 'config-changed')
         pub.subscribe(self.config_fetched_handler, 'config-fetched')
-        pub.subscribe(self.disconnect_received_handler, 'disconnect-received')
+        pub.subscribe(self.disconnected_handler, 'disconnected')
+        pub.subscribe(self.disconnect_failed_handler, 'disconnect-failed')
         pub.subscribe(self.programme_progress_handler, 'programme-progress')
         pub.subscribe(self.queue_size_handler, 'queue-size')
         pub.subscribe(self.start_of_file_handler, 'start-of-file')
@@ -202,10 +203,15 @@ controller to %s?
             int(minutes),
             int(seconds))
 
-    def disconnect_received_handler(self):
+    def disconnected_handler(self):
         self.logger.debug('controller Disconnected signal received')
         self.set_comm_status('Disconnected')
         self.comm_state(1)
+    
+    def disconnect_failed_handler(self):
+        self.logger.debug('controller Disconnect failed signal received')
+        self.set_comm_status('Connected')
+        self.comm_state(2)
 
     def home_received_handler(self, axis_letter, type):
         self.home_switch_found(axis_letter, type)
