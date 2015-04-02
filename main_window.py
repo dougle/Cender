@@ -207,7 +207,7 @@ controller to %s?
         self.logger.debug('controller Disconnected signal received')
         self.set_comm_status('Disconnected')
         self.comm_state(1)
-    
+
     def disconnect_failed_handler(self):
         self.logger.debug('controller Disconnect failed signal received')
         self.set_comm_status('Connected')
@@ -464,6 +464,8 @@ controller to %s?
         # self.visualiser.setToolPosition(50,50,0)
         # self.visualiser.setToolPosition(50,50,-10)
         # self.visualiser.setToolPosition(50,100,0)
+
+        self.ui.lblOutputRuntime.setText(self.format_time(0))
 
     def set_offsets(self):
         self.logger.debug('Setting up offsets')
@@ -763,7 +765,7 @@ controller to %s?
         self.ui.btnPause.setEnabled(True)
         self.ui.btnClear.setEnabled(True)
         self.ui.btnStart.setEnabled(False)
-        self.ui.lblOutputRuntime.setText(str(0))
+        self.ui.lblOutputRuntime.setText(self.format_time(0))
 
         self.controller.send_file(file_path)
 

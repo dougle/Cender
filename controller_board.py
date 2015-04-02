@@ -1,6 +1,7 @@
 import serial
 import logging
 import time
+from math import floor
 import re
 import os
 import random
@@ -193,6 +194,7 @@ class FileTimer(QtCore.QThread):
     total = 0
     paused = False
     timer_tick = QtCore.pyqtSignal(float)
+    last_reported_time = None
 
     def __init__(self, parent=None):
         QtCore.QThread.__init__(self, parent)
@@ -200,14 +202,17 @@ class FileTimer(QtCore.QThread):
 
     def go(self):
         self.last_start_time = time.time()
+        self.timer_tick.emit(0)
         # threading.Timer(0.5, self.report_time).start()
         self.report_time()
 
     def report_time(self):
-        # self.logger.debug('currently paused:' + str(self.paused))
         if self.paused is False and self.last_start_time is not None:
-            self.timer_tick.emit(
-                self.total + (time.time() - self.last_start_time))
+            current_time = floor(self.total + (time.time() - self.last_start_time))
+            if self.last_reported_time != current_time:
+                self.timer_tick.emit(current_time)
+                self.last_reported_time = current_time
+        
         threading.Timer(0.5, self.report_time).start()
 
     def reset(self):
@@ -318,7 +323,9 @@ class ControllerBoard(QtCore.QObject):
             self.timer_thread.timer_tick.connect(self.timer_tick_handler)
             self.timer_thread.start()
         else:
+            self.logger.debug('ReStart existing file timer')
             self.timer_thread.reset()
+            self.timer_thread.resume()
 
     def timer_tick_handler(self, total):
         pub.sendMessage('timer-tick', total=total)
